@@ -93,12 +93,3 @@ managed_services: klipper
 virtualenv: /home/pi/klippy-env/
 requirements: wiki/requirements.txt
 system_dependencies: wiki/packages.json
-[update_manager crowsnest]
-type: git_repo
-path: ~/crowsnest
-origin: https://github.com/mainsail-crew/crowsnest.git
-primary_branch: v5
-managed_services: crowsnest
-system_dependencies: system-dependencies.json
-virtualenv: ~/crowsnest-env
-requirements: requirements.txt
