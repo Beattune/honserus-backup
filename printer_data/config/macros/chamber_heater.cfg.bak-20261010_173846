@@ -1,0 +1,302 @@
+# Chamber heater control.
+#
+# Hardware:
+#   - 2x 250W/230V PTC elements, both switched by one SSR on PA3.
+#   - 2x 7530 radial fans (24V), both on PD13, one per PTC element.
+#   - Control sensor PF4 (NTC 3950) sits in the PTC's cooling fins.
+#     It reads FIN temperature, never chamber air temperature.
+#   - Chamber air is read separately via [temperature_sensor chamber] (BME280).
+#   - The heater body also has a fixed, non-monitored, self-resetting bimetal
+#     thermostat (normally closed, trips at 70C, resets only around 45-55C).
+#     No sensor reads it directly. A trip is effectively permanent for the
+#     rest of the print, since the chamber stays warmer than the reset band
+#     while printing. Strategy: never trip it, not "trip and recover".
+#
+# Thermostat model (see the cap comment in chamber_heater_control below for
+# the full derivation): thermostat ~= chamber + ratio * (fin - chamber).
+# This lets us compute, for the current chamber temperature, the highest fin
+# setpoint that still keeps the thermostat under body_max. ratio and
+# body_max live as variable_ entries on _CHAMBER_HEATER_STATE so they can be
+# re-tuned without touching the logic.
+
+
+# Single host macro for all chamber-loop state and tunables. Holds no gcode
+# of its own - SET_GCODE_VARIABLE / printer['gcode_macro _CHAMBER_HEATER_STATE']
+# read/write these fields. Never call this macro directly.
+[gcode_macro _CHAMBER_HEATER_STATE]
+variable_target: 0
+variable_active: False
+variable_fin_target: 0
+# Derived from a real thermostat trip in klippy.log: fin=76C, chamber=62C,
+# thermostat=70C (by definition, since that's its rated trip point).
+#   ratio = (thermostat - chamber) / (fin - chamber) = (70-62)/(76-62) = 0.57
+variable_ratio: 0.57
+# Ceiling for the thermostat's *modeled* temperature - kept 10K under its
+# 70C trip point as margin for sensor lag and model error.
+variable_body_max: 60
+# Hard ceiling on the fin setpoint itself, independent of the thermostat
+# model (protects the PTC elements/wiring regardless of chamber temp).
+variable_air_max: 95
+gcode:
+  # State/tunable store only - not meant to be run.
+
+
+# Control loop: recomputes the fin setpoint every 10s from the current
+# chamber temperature and the thermostat-safety model, with hysteresis and
+# a setpoint ramp so the fin PID never sees a sudden large step.
+[delayed_gcode chamber_heater_control]
+initial_duration: 0.0
+gcode:
+  {% set S = printer['gcode_macro _CHAMBER_HEATER_STATE'] %}
+  {% set target = S.target | float %}
+  {% set active = S.active %}
+  {% set fin_prev = S.fin_target | float %}
+  {% set ratio = S.ratio | float %}
+  {% set body_max = S.body_max | float %}
+  {% set air_max = S.air_max | float %}
+  {% set chamber = printer['temperature_sensor chamber'].temperature %}
+
+  {% if target <= 0 %}
+    # Target zeroed (SET_CHAMBER_TARGET TARGET=0 or STOP_CHAMBER_HEATER) -
+    # turn the chamber heater off and stop rescheduling. No UPDATE_DELAYED_GCODE
+    # call below means the loop genuinely ends here, it does not just idle.
+    SET_HEATER_TEMPERATURE HEATER=heater_chamber TARGET=0
+    SET_GCODE_VARIABLE MACRO=_CHAMBER_HEATER_STATE VARIABLE=active VALUE=False
+    SET_GCODE_VARIABLE MACRO=_CHAMBER_HEATER_STATE VARIABLE=fin_target VALUE=0
+  {% else %}
+    # --- 1. Raw fin setpoint from the chamber error -----------------------
+    # Base offset of 10C over target plus 5C of extra push per degree the
+    # chamber is still short of target, for fast heat-up when cold.
+    {% set raw = target + 10 + (target - chamber) * 5 %}
+
+    # --- 2. Thermostat safety cap ------------------------------------------
+    # The bimetal thermostat sits thermally between the fins (PF4) and the
+    # chamber air (BME280), so its temperature is somewhere in between, not
+    # equal to either one. Modeled as a fixed interpolation:
+    #
+    #   thermostat ~= chamber + ratio * (fin - chamber)
+    #
+    # ratio=0.57 was derived from one real trip: fin=76C, chamber=62C, and
+    # the thermostat was necessarily at its 70C rating at the instant it
+    # opened, giving ratio = (70-62)/(76-62) = 0.57.
+    #
+    # We want the highest fin setpoint that still keeps the *modeled*
+    # thermostat temperature at or below body_max (60C, i.e. a 10K margin
+    # below the real 70C trip point). Solving the model above for fin:
+    #
+    #   body_max = chamber + ratio * (cap - chamber)
+    #   cap      = chamber + (body_max - chamber) / ratio
+    #
+    # This is why cap moves with chamber temperature: a cold chamber allows
+    # a high fin cap (big fin/chamber delta is fine, thermostat stays cool
+    # in absolute terms), while a warm chamber pulls the cap down hard,
+    # since the same fin/chamber delta now sits on top of a warmer chamber
+    # baseline and pushes the thermostat closer to tripping.
+    #
+    # If the hardware changes (different PTC body, different thermostat),
+    # re-derive ratio from a fresh logged trip point (fin/chamber at the
+    # moment TEMPERATURE_WAIT or a print shows the heater going dead) and
+    # update variable_ratio / variable_body_max above - do not hand-tune
+    # ratio without a real data point, it is not a free knob.
+    {% set cap = chamber + (body_max - chamber) / ratio %}
+
+    # --- 3. Clamp to cap and the absolute air_max hardware ceiling --------
+    {% set upper = [cap, air_max] | min %}
+    {% set desired = [raw, upper] | min %}
+    {% set desired = [desired, 0] | max %}
+
+    # --- 4. Heating below chamber temp is pointless ------------------------
+    {% if desired < chamber + 2 %}
+      {% set desired = 0 %}
+    {% endif %}
+
+    # --- 5. Hysteresis on/off, evaluated on chamber air, not fin temp -----
+    # Only flips state at the 1.5/1 thresholds; holding inside that band
+    # keeps the previous active state, so we don't chatter every 10s.
+    {% if chamber > target + 1.5 %}
+      {% set active = False %}
+    {% elif chamber < target - 1 %}
+      {% set active = True %}
+    {% endif %}
+    {% if not active %}
+      {% set desired = 0 %}
+    {% endif %}
+
+    # --- 6. Rate-limit the setpoint change so the fin PID never sees a ----
+    #        step bigger than 8C in one 10s cycle (avoids integrator windup
+    #        / output saturation from a sudden large jump).
+    {% set delta = desired - fin_prev %}
+    {% if delta > 8 %}
+      {% set final = fin_prev + 8 %}
+    {% elif delta < -8 %}
+      {% set final = fin_prev - 8 %}
+    {% else %}
+      {% set final = desired %}
+    {% endif %}
+    {% set final = [final, 0] | max %}
+    {% set final = final | round(1) %}
+
+    SET_HEATER_TEMPERATURE HEATER=heater_chamber TARGET={final}
+    SET_GCODE_VARIABLE MACRO=_CHAMBER_HEATER_STATE VARIABLE=active VALUE={active}
+    SET_GCODE_VARIABLE MACRO=_CHAMBER_HEATER_STATE VARIABLE=fin_target VALUE={final}
+    UPDATE_DELAYED_GCODE ID=chamber_heater_control DURATION=10
+  {% endif %}
+
+
+# Set chamber target at runtime and (re)start the control loop.
+# Pin to the Mainsail dashboard for one-click use during a print.
+[gcode_macro SET_CHAMBER_TARGET]
+description: Set chamber target temperature (TARGET=0 stops the loop)
+gcode:
+  {% set target = params.TARGET | default(55) | int %}
+  SET_GCODE_VARIABLE MACRO=_CHAMBER_HEATER_STATE VARIABLE=target VALUE={target}
+  {% if target > 0 %}
+    SET_GCODE_VARIABLE MACRO=_CHAMBER_HEATER_STATE VARIABLE=active VALUE=True
+  {% endif %}
+  # DURATION=1, not 0: SET_GCODE_VARIABLE only takes effect once this macro
+  # ends, so the loop must not fire before that write has actually landed.
+  UPDATE_DELAYED_GCODE ID=chamber_heater_control DURATION=1
+  SET_DISPLAY_TEXT MSG="Chamber target: {target}c"
+
+
+# Stop the control loop and turn off ONLY the chamber heater. Must never
+# touch the nozzle or bed - this gets tapped mid-print.
+[gcode_macro STOP_CHAMBER_HEATER]
+description: Stop chamber heater control (leaves nozzle/bed/fans alone)
+gcode:
+  UPDATE_DELAYED_GCODE ID=chamber_heater_control DURATION=0
+  SET_GCODE_VARIABLE MACRO=_CHAMBER_HEATER_STATE VARIABLE=target VALUE=0
+  SET_GCODE_VARIABLE MACRO=_CHAMBER_HEATER_STATE VARIABLE=active VALUE=False
+  SET_GCODE_VARIABLE MACRO=_CHAMBER_HEATER_STATE VARIABLE=fin_target VALUE=0
+  SET_HEATER_TEMPERATURE HEATER=heater_chamber TARGET=0
+  SET_DISPLAY_TEXT MSG="Chamber heater stopped"
+
+
+# Private - blocking heat-up used by _HEATSOAK_CORE and M191. Not shown in
+# Mainsail.
+#
+# Why this doesn't deadlock (chamber_heater_control's ramp-based version did):
+# TEMPERATURE_WAIT blocks the ENTIRE gcode command queue for its duration -
+# proven empirically on this printer: even a bare RESPOND could not execute
+# while a TEMPERATURE_WAIT was in progress. chamber_heater_control needs that
+# same queue to run its every-10s SET_HEATER_TEMPERATURE calls, so wrapping
+# "start the loop, then TEMPERATURE_WAIT" the old way meant the loop could
+# never fire even once - the heater stayed at 0 and the wait blocked forever.
+#
+# The fix: don't depend on repeated gcode execution during the wait at all.
+# Klipper's own heater PID holds whatever target SET_HEATER_TEMPERATURE last
+# gave it via its own reactor timer, completely independent of the gcode
+# queue - the same way extruder/bed heaters hold their target through any
+# blocking wait. So we compute ONE safe fin ceiling up front and set it
+# directly; Klipper keeps heating toward it on its own while TEMPERATURE_WAIT
+# blocks everything else. No loop needs to run during the wait.
+#
+# That single ceiling has to stay safe for the *whole* heat-up, not just the
+# instant it's set. cap = chamber + (body_max - chamber) / ratio is strictly
+# decreasing in chamber temperature here (ratio 0.57 < 1), so the lowest -
+# most conservative - cap of the whole trajectory is the one evaluated at the
+# TARGET chamber temperature (the warmest point we're heating towards). Using
+# that fixed, worst-case cap for the entire wait is always <= the true
+# instantaneous cap at every colder intermediate chamber temperature, so it
+# can never let the fins run hotter than the dynamic formula would allow.
+[gcode_macro _CHAMBER_HEATUP_WAIT]
+gcode:
+  {% set target = params.TARGET | int %}
+  # WAIT lets the caller release the block at a lower chamber temperature
+  # than the final TARGET (e.g. OrcaSlicer's CHAMBER_MIN) while the heater
+  # keeps climbing toward TARGET in the background after handoff below.
+  # Defaults to TARGET (old behavior: wait for the full target) and is
+  # clamped so it can never exceed TARGET - waiting past the final target
+  # would just wait forever once hysteresis caps the chamber there.
+  {% set wait_for = params.WAIT | default(target) | int %}
+  {% set wait_for = [wait_for, target] | min %}
+  {% set S = printer['gcode_macro _CHAMBER_HEATER_STATE'] %}
+  {% set ratio = S.ratio | float %}
+  {% set body_max = S.body_max | float %}
+  {% set air_max = S.air_max | float %}
+
+  {% set cap_static = target + (body_max - target) / ratio %}
+  {% set fin_target = [cap_static, air_max] | min %}
+  {% set fin_target = [fin_target, 0] | max %}
+  {% set fin_target = fin_target | round(1) %}
+
+  SET_HEATER_TEMPERATURE HEATER=heater_chamber TARGET={fin_target}
+  SET_GCODE_VARIABLE MACRO=_CHAMBER_HEATER_STATE VARIABLE=target VALUE={target}
+  SET_GCODE_VARIABLE MACRO=_CHAMBER_HEATER_STATE VARIABLE=active VALUE=True
+  # Recorded so chamber_heater_control's ramp continues smoothly from this
+  # value once it takes over below, instead of jumping from a stale fin_target.
+  SET_GCODE_VARIABLE MACRO=_CHAMBER_HEATER_STATE VARIABLE=fin_target VALUE={fin_target}
+
+  # NOTE on timeout: TEMPERATURE_WAIT still has no built-in time-based
+  # timeout in Klipper/Kalico - it blocks until MINIMUM is reached or
+  # forever. That's no longer a deadlock risk (the heater is genuinely
+  # heating on its own the whole time), but a real hardware fault - jammed
+  # door, dead heater, disconnected sensor - would still hang here
+  # indefinitely. A hard timeout has to live outside this .cfg: a Moonraker
+  # component/script polling "temperature_sensor chamber" and issuing
+  # CANCEL_PRINT (or, as a last resort, M112) after N minutes. Until then,
+  # M112 from Mainsail is the manual way out of a stuck wait.
+  TEMPERATURE_WAIT SENSOR="temperature_sensor chamber" MINIMUM={wait_for}
+
+  # Hand off to the dynamic control loop for the hold/maintain phase - this
+  # recomputes cap every 10s against the actual chamber temperature, which is
+  # safe here because nothing blocks the gcode queue during normal printing.
+  # Uses TARGET (not WAIT), so the chamber keeps heating toward the real
+  # target after the wait releases at the lower WAIT threshold.
+  SET_CHAMBER_TARGET TARGET={target}
+
+
+# Private - owns the heatsoak sequence for HEATSOAK. Not shown in Mainsail.
+# MIN (optional) lets the wait release at a lower chamber temperature than
+# CHAMBER while the heater keeps climbing to CHAMBER afterward - see
+# _CHAMBER_HEATUP_WAIT's WAIT param. Defaults to CHAMBER (old behavior).
+[gcode_macro _HEATSOAK_CORE]
+gcode:
+  {% set chamber = params.CHAMBER | int %}
+  {% set wait_for = params.MIN | default(chamber) | int %}
+  SET_DISPLAY_TEXT MSG="Heating chamber to {chamber}c"
+  _CHAMBER_HEATUP_WAIT TARGET={chamber} WAIT={wait_for}
+  SET_DISPLAY_TEXT MSG="Chamber at {wait_for}c - heatsoak wait done"
+
+
+# Standalone heatsoak trigger for console/Mainsail use: home, park centered,
+# heat bed + chamber, wait. Bed is fixed at 110C. CHAMBER defaults to 50C.
+[gcode_macro HEATSOAK]
+description: Home, park, heat bed to 110C and chamber to CHAMBER (default 50C)
+gcode:
+  {% set chamber = params.CHAMBER | default(50) | int %}
+  CG28
+  G0 X{printer.toolhead.axis_maximum.x / 2} Y{printer.toolhead.axis_maximum.y / 2} Z150 F3600
+  SET_DISPLAY_TEXT MSG="Heatsoak: Chamber {chamber}c"
+  SET_HEATER_TEMPERATURE HEATER=heater_bed TARGET=110
+  M106 S77                                                                                             # Circulate air (~30% fan speed)
+  _HEATSOAK_CORE CHAMBER={chamber}
+
+
+# Slicer interface: set chamber target, do not wait. S=0 stops the loop
+# cleanly instead of leaving it running at target 0.
+[gcode_macro M141]
+description: Set chamber target temperature (no wait)
+gcode:
+  {% set target = params.S | default(0) | int %}
+  {% if target <= 0 %}
+    STOP_CHAMBER_HEATER
+  {% else %}
+    SET_CHAMBER_TARGET TARGET={target}
+  {% endif %}
+
+
+# Slicer interface: set chamber target and block until reached. Always
+# waits on the chamber air sensor, never on the fin-temperature heater -
+# waiting on the heater would finish at the wrong physical temperature.
+[gcode_macro M191]
+description: Set chamber target temperature and wait for chamber to reach it
+gcode:
+  {% set target = params.S | default(0) | int %}
+  {% if target <= 0 %}
+    STOP_CHAMBER_HEATER
+  {% else %}
+    SET_DISPLAY_TEXT MSG="Waiting for chamber {target}c"
+    _CHAMBER_HEATUP_WAIT TARGET={target}
+    SET_DISPLAY_TEXT MSG="Chamber at {target}c"
+  {% endif %}
