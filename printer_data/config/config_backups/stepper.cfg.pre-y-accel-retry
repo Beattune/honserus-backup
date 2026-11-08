@@ -1,0 +1,86 @@
+########################################
+# Octopus Pro
+########################################
+# Driver 0
+[stepper_z]
+step_pin: PF13
+dir_pin: !PF12
+enable_pin: !PF14
+rotation_distance: 8
+microsteps: 64
+endstop_pin: probe:z_virtual_endstop
+position_min: -2.5
+position_max: 250
+homing_speed: 10
+second_homing_speed: 3
+homing_retract_dist: 0
+
+# Driver 1
+[stepper_z1]
+step_pin: PG0
+dir_pin: !PG1
+enable_pin: !PF15
+rotation_distance: 8
+microsteps: 64
+
+# Driver 2
+[stepper_z2]
+step_pin: PF11
+dir_pin: !PG3
+enable_pin: !PG5
+rotation_distance: 8
+microsteps: 64
+
+# Driver 3
+[stepper_y]
+step_pin: PG4
+dir_pin: !PC1
+enable_pin: !PA2
+rotation_distance: 40
+microsteps: 64
+full_steps_per_rotation: 200
+# accel_homing previous: endstop_pin: ^PG9
+#endstop_pin: accel_homing:y  # INTERIM: physical Y switch until Y accel calibration works
+endstop_pin: ^PG9
+position_min: 0
+position_endstop: 329
+position_max: 329
+homing_speed: 50
+homing_retract_dist: 75
+homing_positive_dir: true
+min_home_dist: 20
+
+# Driver 4
+#homing_retract_dist: 0  # required for accel_homing:y
+[stepper_x]
+step_pin: PF9
+dir_pin: !PF10
+enable_pin: !PG2
+rotation_distance: 40
+microsteps: 64
+full_steps_per_rotation: 200
+# accel_homing previous: endstop_pin: ^PG6
+endstop_pin: accel_homing:x
+position_min: 0
+position_endstop: 347
+position_max: 347
+homing_speed: 50
+homing_positive_dir: true
+# accel_homing previous: min_home_dist: 20
+
+# Driver 5
+homing_retract_dist: 0
+[stepper_y1]
+step_pin: PC13
+dir_pin: !PF0
+enable_pin: !PF1
+rotation_distance: 40
+microsteps: 64
+
+# Driver 6
+[stepper_x1]
+step_pin: PE2
+dir_pin: !PE3
+enable_pin: !PD4
+rotation_distance: 40
+microsteps: 64
