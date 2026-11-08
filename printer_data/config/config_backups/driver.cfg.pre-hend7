@@ -1,0 +1,108 @@
+# BTT Octopus Pro V1.1 - STM32H723
+# Driver0: BTT TMC2209 (UART) - Stepper Z
+# Driver1: BTT TMC2209 (UART) - Stepper Z1
+# Driver2: BTT TMC2209 (UART) - Stepper Z2
+# Driver3: BTT TMC5160T Plus (SPI) - Stepper y
+# Driver4: BTT TMC5160T Plus (SPI) - Stepper x
+# Driver5: BTT TMC5160T Plus (SPI) - Stepper y1
+# Driver6: BTT TMC5160T Plus (SPI) - Stepper x1
+# Driver7: BTT TMC2240 (SPI) - Extruder
+
+# Driver 0
+[tmc2209 stepper_z]
+uart_pin: PC4
+sense_resistor: 0.110
+run_current: 0.990
+interpolate: true
+stealthchop_threshold: 0
+
+# Driver 1
+[tmc2209 stepper_z1]
+uart_pin: PD11
+sense_resistor: 0.110
+run_current: 0.990
+interpolate: true
+stealthchop_threshold: 0
+
+# Driver 2
+[tmc2209 stepper_z2]
+uart_pin: PC6
+sense_resistor: 0.110
+run_current: 0.990
+interpolate: true
+stealthchop_threshold: 0
+
+# Driver 3
+[tmc5160 stepper_y]
+cs_pin: PC7
+spi_software_miso_pin: PA6
+spi_software_mosi_pin: PA7
+spi_software_sclk_pin: PA5
+sense_resistor: 0.100
+run_current: 1.980
+interpolate: false
+stealthchop_threshold: 0
+driver_CS: 27
+driver_TBL: 1
+driver_TOFF: 3
+driver_HSTRT: 6
+driver_HEND: 3
+
+# Driver 4
+[tmc5160 stepper_x]
+cs_pin: PF2
+spi_software_miso_pin: PA6
+spi_software_mosi_pin: PA7
+spi_software_sclk_pin: PA5
+sense_resistor: 0.100
+run_current: 1.980
+interpolate: false
+stealthchop_threshold: 0
+driver_CS: 27
+driver_TBL: 1
+driver_TOFF: 3
+driver_HSTRT: 6
+driver_HEND: 3
+
+# Driver 5
+[tmc5160 stepper_y1]
+cs_pin: PE4
+spi_software_miso_pin: PA6
+spi_software_mosi_pin: PA7
+spi_software_sclk_pin: PA5
+sense_resistor: 0.100
+run_current: 1.980
+interpolate: false
+stealthchop_threshold: 0
+driver_CS: 27
+driver_TBL: 1
+driver_TOFF: 3
+driver_HSTRT: 6
+driver_HEND: 3
+
+# Driver 6
+[tmc5160 stepper_x1]
+cs_pin: PE1
+spi_software_miso_pin: PA6
+spi_software_mosi_pin: PA7
+spi_software_sclk_pin: PA5
+sense_resistor: 0.100
+run_current: 1.980
+interpolate: false
+stealthchop_threshold: 0
+driver_CS: 27
+driver_TBL: 1
+driver_TOFF: 3
+driver_HSTRT: 6
+driver_HEND: 3
+
+# Driver7
+[tmc2240 extruder]
+cs_pin: PD3
+spi_software_miso_pin: PA6
+spi_software_mosi_pin: PA7
+spi_software_sclk_pin: PA5
+rref: 12000
+run_current: 0.4
+interpolate: false
+stealthchop_threshold: 0
