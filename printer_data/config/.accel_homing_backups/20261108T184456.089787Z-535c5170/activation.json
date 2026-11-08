@@ -1,0 +1,10 @@
+{
+  "config": "/home/pi/printer_data/config/printer.cfg",
+  "reason": "--no-restart",
+  "repo": "/home/pi/klipper",
+  "restart_attempted": false,
+  "service": "klipper.service",
+  "status": "skipped",
+  "updated_utc": "2026-11-08T18:44:56.246683+00:00",
+  "version": 1
+}

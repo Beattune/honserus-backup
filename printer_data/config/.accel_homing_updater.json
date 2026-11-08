@@ -1,0 +1,13 @@
+{
+  "append": "CiMgYWNjZWxfaG9taW5nIG1hbmFnZWQgTW9vbnJha2VyIHVwZGF0ZSByZWdpc3RyYXRpb24KIyBNYW5hZ2VkIGJ5IHRoZSBhY2NlbGVyb21ldGVyIGhvbWluZyBpbnN0YWxsZXIuClt1cGRhdGVfbWFuYWdlciBhY2NlbF9ob21pbmddCnR5cGU6IGdpdF9yZXBvCmNoYW5uZWw6IGRldgpwYXRoOiAvaG9tZS9waS9hY2NlbF9ob21pbmcKb3JpZ2luOiBodHRwczovL2dpdGh1Yi5jb20vRnJhbmtSYW1tL2FjY2VsX2hvbWluZy5naXQKcHJpbWFyeV9icmFuY2g6IG1haW4KaXNfc3lzdGVtX3NlcnZpY2U6IEZhbHNlCm1hbmFnZWRfc2VydmljZXM6IGtsaXBwZXIK",
+  "branch": "main",
+  "commit": "7258710de6754680d586a5f887dc125bf13c91f0",
+  "instance": "8ea8cc609e52a62d",
+  "layout": "direct",
+  "managed_repo": "/home/pi/accel_homing",
+  "moon_config": "/home/pi/printer_data/config/moonraker.conf",
+  "moon_data": "/home/pi/printer_data",
+  "moon_socket": "/home/pi/printer_data/comms/klippy.sock",
+  "origin": "https://github.com/FrankRamm/accel_homing.git",
+  "version": 1
+}

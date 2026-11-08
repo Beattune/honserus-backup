@@ -1,0 +1,8 @@
+{
+  "status": "skipped",
+  "service": "moonraker.service",
+  "config": "/home/pi/printer_data/config/moonraker.conf",
+  "instance": "8ea8cc609e52a62d",
+  "registration_sha256": "f63431c5195b0eb4e97359b265fd461449a8bea1636595d30e0f09942e214dc6",
+  "reason": "--no-restart"
+}
