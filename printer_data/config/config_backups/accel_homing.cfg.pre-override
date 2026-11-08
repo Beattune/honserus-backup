@@ -1,7 +1,0 @@
-# Managed by the accelerometer homing installer. Edit this file normally.
-# Independent overrides; leave commented to use SAVE_CONFIG calibration models.
-[accel_homing]
-accel_chip: adxl345 carto
-#x_threshold: 8.0
-#y_threshold: 8.0
-#model: default
