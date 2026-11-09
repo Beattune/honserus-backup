@@ -4158,5 +4158,12 @@
     "Rejected/partial homes are retained; no automatic recalibration or threshold change.",
     "Empty CSV cells represent invalid/missing numbers; see capture invalid_rows.",
     "Charts use impact windows; raw retained CSV rows are not decimated."
-  ]
+  ],
+  "render": {
+    "result": "complete",
+    "files": [
+      "home-001-y.png",
+      "summary.png"
+    ]
+  }
 }
