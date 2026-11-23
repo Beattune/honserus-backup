@@ -20491,5 +20491,19 @@
       "debug/context.json"
     ],
     "errors": {}
+  },
+  "render": {
+    "result": "complete",
+    "files": [
+      "home-001-y-timing.png",
+      "home-001-y.png",
+      "home-002-y-timing.png",
+      "home-002-y.png",
+      "home-003-y-timing.png",
+      "home-003-y.png",
+      "home-004-y-timing.png",
+      "home-004-y.png",
+      "summary.png"
+    ]
   }
 }
