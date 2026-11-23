@@ -1,0 +1,261 @@
+{
+  "version": 1,
+  "homes": [
+    {
+      "home_id": 1,
+      "axis": "y",
+      "phase": "discovery",
+      "version": 1,
+      "status": "complete",
+      "segments": {
+        "onset_to_batch_last": {
+          "duration_s": 0.004503578947378628,
+          "clock_basis": "main_mcu_print_time",
+          "status": "available",
+          "reason": null
+        },
+        "batch_last_to_adapter": {
+          "duration_s": 0.003292703846113909,
+          "clock_basis": "main_mcu_print_time; adapter entry is a local clocksync estimate",
+          "status": "available",
+          "reason": null
+        },
+        "adapter_to_detector": {
+          "duration_s": 0.00033974099994793505,
+          "clock_basis": "host_monotonic",
+          "status": "available",
+          "reason": null
+        },
+        "detector_to_request": {
+          "duration_s": 0.00015777800001615105,
+          "clock_basis": "host_monotonic",
+          "status": "available",
+          "reason": null
+        }
+      },
+      "onset_to_host_dispatch_estimate_s": 0.008293817408912219,
+      "decomposition_residual_s": 1.561545559525257e-08,
+      "stop_call_duration_s": 6.701799998154456e-05,
+      "stop_call_clock_basis": "host_monotonic",
+      "hardware_receipt_time_s": null,
+      "mcu_halt_time_s": null,
+      "physical_contact_time_s": null,
+      "packet_retention_omitted": 1072,
+      "evidence": {
+        "onset_print_time_s": 893.0328984210527,
+        "request_before_host_monotonic_s": 855.679830564,
+        "request_estimated_print_time_s": 893.0411922384616,
+        "onset_sample": [
+          893031290,
+          6112,
+          5,
+          20
+        ],
+        "detector_packet_sequence": 1581,
+        "detector_source": "klipper_batch_detector",
+        "detector_entry_host_monotonic_s": 855.679672786,
+        "adapter_packet_sequence": 1582,
+        "adapter_source": "klipper_batch",
+        "source_batch_last_print_time_s": 893.037402,
+        "source_batch_first_print_time_s": 893.03129,
+        "source_batch_sample_count": 20,
+        "adapter_entry_host_monotonic_s": 855.679333045,
+        "adapter_entry_estimated_print_time_s": 893.0406947038462
+      },
+      "interpretation": "Delivery / driver is an aggregate sample-age estimate, not pure transport latency. Mixed-clock component sum is approximate; the residual records clocksync differences. No MCU receipt, physical contact or physical halt timestamp is available.",
+      "reason": null
+    },
+    {
+      "home_id": 2,
+      "axis": "y",
+      "phase": "measurement",
+      "version": 1,
+      "status": "complete",
+      "segments": {
+        "onset_to_batch_last": {
+          "duration_s": 0.005471315789463915,
+          "clock_basis": "main_mcu_print_time",
+          "status": "available",
+          "reason": null
+        },
+        "batch_last_to_adapter": {
+          "duration_s": 0.003895090384617106,
+          "clock_basis": "main_mcu_print_time; adapter entry is a local clocksync estimate",
+          "status": "available",
+          "reason": null
+        },
+        "adapter_to_detector": {
+          "duration_s": 0.00031733399998756795,
+          "clock_basis": "host_monotonic",
+          "status": "available",
+          "reason": null
+        },
+        "detector_to_request": {
+          "duration_s": 0.00012761100003899628,
+          "clock_basis": "host_monotonic",
+          "status": "available",
+          "reason": null
+        }
+      },
+      "onset_to_host_dispatch_estimate_s": 0.00981136771247293,
+      "decomposition_residual_s": 1.653836534387665e-08,
+      "stop_call_duration_s": 0.00013787000000320404,
+      "stop_call_clock_basis": "host_monotonic",
+      "hardware_receipt_time_s": null,
+      "mcu_halt_time_s": null,
+      "physical_contact_time_s": null,
+      "packet_retention_omitted": 961,
+      "evidence": {
+        "onset_print_time_s": 902.4878426842106,
+        "request_before_host_monotonic_s": 865.135978762,
+        "request_estimated_print_time_s": 902.4976540519231,
+        "onset_sample": [
+          902487199,
+          6115,
+          2,
+          20
+        ],
+        "detector_packet_sequence": 1470,
+        "detector_source": "klipper_batch_detector",
+        "detector_entry_host_monotonic_s": 865.135851151,
+        "adapter_packet_sequence": 1471,
+        "adapter_source": "klipper_batch",
+        "source_batch_last_print_time_s": 902.493314,
+        "source_batch_first_print_time_s": 902.487199,
+        "source_batch_sample_count": 20,
+        "adapter_entry_host_monotonic_s": 865.135533817,
+        "adapter_entry_estimated_print_time_s": 902.4972090903847
+      },
+      "interpretation": "Delivery / driver is an aggregate sample-age estimate, not pure transport latency. Mixed-clock component sum is approximate; the residual records clocksync differences. No MCU receipt, physical contact or physical halt timestamp is available.",
+      "reason": null
+    },
+    {
+      "home_id": 3,
+      "axis": "y",
+      "phase": "measurement",
+      "version": 1,
+      "status": "complete",
+      "segments": {
+        "onset_to_batch_last": {
+          "duration_s": 0.001930666666680736,
+          "clock_basis": "main_mcu_print_time",
+          "status": "available",
+          "reason": null
+        },
+        "batch_last_to_adapter": {
+          "duration_s": 0.004698726923038521,
+          "clock_basis": "main_mcu_print_time; adapter entry is a local clocksync estimate",
+          "status": "available",
+          "reason": null
+        },
+        "adapter_to_detector": {
+          "duration_s": 0.00022248200002650265,
+          "clock_basis": "host_monotonic",
+          "status": "available",
+          "reason": null
+        },
+        "detector_to_request": {
+          "duration_s": 0.00014627799998834234,
+          "clock_basis": "host_monotonic",
+          "status": "available",
+          "reason": null
+        }
+      },
+      "onset_to_host_dispatch_estimate_s": 0.006998166666676298,
+      "decomposition_residual_s": 1.3076942195766605e-08,
+      "stop_call_duration_s": 0.0001491479999913281,
+      "stop_call_clock_basis": "host_monotonic",
+      "hardware_receipt_time_s": null,
+      "mcu_halt_time_s": null,
+      "physical_contact_time_s": null,
+      "packet_retention_omitted": 967,
+      "evidence": {
+        "onset_print_time_s": 911.9442853333334,
+        "request_before_host_monotonic_s": 874.589282386,
+        "request_estimated_print_time_s": 911.9512835,
+        "onset_sample": [
+          911943320,
+          2896,
+          3,
+          10
+        ],
+        "detector_packet_sequence": 1474,
+        "detector_source": "klipper_batch_detector",
+        "detector_entry_host_monotonic_s": 874.589136108,
+        "adapter_packet_sequence": 1475,
+        "adapter_source": "klipper_batch",
+        "source_batch_last_print_time_s": 911.946216,
+        "source_batch_first_print_time_s": 911.94332,
+        "source_batch_sample_count": 10,
+        "adapter_entry_host_monotonic_s": 874.588913626,
+        "adapter_entry_estimated_print_time_s": 911.9509147269231
+      },
+      "interpretation": "Delivery / driver is an aggregate sample-age estimate, not pure transport latency. Mixed-clock component sum is approximate; the residual records clocksync differences. No MCU receipt, physical contact or physical halt timestamp is available.",
+      "reason": null
+    },
+    {
+      "home_id": 4,
+      "axis": "y",
+      "phase": "measurement",
+      "version": 1,
+      "status": "complete",
+      "segments": {
+        "onset_to_batch_last": {
+          "duration_s": 0.0038602105262270925,
+          "clock_basis": "main_mcu_print_time",
+          "status": "available",
+          "reason": null
+        },
+        "batch_last_to_adapter": {
+          "duration_s": 0.004816859615402791,
+          "clock_basis": "main_mcu_print_time; adapter entry is a local clocksync estimate",
+          "status": "available",
+          "reason": null
+        },
+        "adapter_to_detector": {
+          "duration_s": 0.00044129699995210103,
+          "clock_basis": "host_monotonic",
+          "status": "available",
+          "reason": null
+        },
+        "detector_to_request": {
+          "duration_s": 0.0002430370000183757,
+          "clock_basis": "host_monotonic",
+          "status": "available",
+          "reason": null
+        }
+      },
+      "onset_to_host_dispatch_estimate_s": 0.009361427833937341,
+      "decomposition_residual_s": 2.369233698118478e-08,
+      "stop_call_duration_s": 0.00020849999998517887,
+      "stop_call_clock_basis": "host_monotonic",
+      "hardware_receipt_time_s": null,
+      "mcu_halt_time_s": null,
+      "physical_contact_time_s": null,
+      "packet_retention_omitted": 968,
+      "evidence": {
+        "onset_print_time_s": 921.4011917894737,
+        "request_before_host_monotonic_s": 884.048226195,
+        "request_estimated_print_time_s": 921.4105532173077,
+        "onset_sample": [
+          921398940,
+          6112,
+          7,
+          20
+        ],
+        "detector_packet_sequence": 1473,
+        "detector_source": "klipper_batch_detector",
+        "detector_entry_host_monotonic_s": 884.047983158,
+        "adapter_packet_sequence": 1474,
+        "adapter_source": "klipper_batch",
+        "source_batch_last_print_time_s": 921.405052,
+        "source_batch_first_print_time_s": 921.39894,
+        "source_batch_sample_count": 20,
+        "adapter_entry_host_monotonic_s": 884.047541861,
+        "adapter_entry_estimated_print_time_s": 921.4098688596154
+      },
+      "interpretation": "Delivery / driver is an aggregate sample-age estimate, not pure transport latency. Mixed-clock component sum is approximate; the residual records clocksync differences. No MCU receipt, physical contact or physical halt timestamp is available.",
+      "reason": null
+    }
+  ]
+}
